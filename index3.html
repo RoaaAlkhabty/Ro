@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>مجمّع رؤيا للمنصات التعليمية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Google Font عربي واضح -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap + Icons + AOS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
+
+  <style>
+    /* ثيم افتراضي نهاري بخلفية بيضاء وخط أسود واضح */
+    :root{
+      --bg-light: #c2d1db;   /* أبيض صريح */
+      --bg-card: #fbfbfb;
+      --text: #0b0b0b;       /* أسود شبه نقي */
+      --muted: #5c606a;      /* رمادي مريح للتفاصيل */
+      --primary: #6256f9;
+      --chip: #f0f1ff;
+      --chip-text: #3b34b8;
+      --ring: rgba(98,86,249,.25);
+    }
+    [data-bs-theme="dark"]{
+      --bg-light: #0f1220;
+      --bg-card: #171a2b;
+      --text: #eaeefb;
+      --muted: #a3acc7;
+      --chip: rgba(98,86,249,.18);
+      --chip-text: #d9dcff;
+      --ring: rgba(98,86,249,.35);
+    }
+
+    html, body { height: 100%; }
+    body{
+      font-family: "Cairo", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic", sans-serif;
+      background:
+        radial-gradient(1100px 260px at 50% -90px, rgba(180, 178, 178, 0.03), transparent 60%),
+        var(--bg-light);
+      color: var(--text);
+    }
+
+    .navbar { backdrop-filter: saturate(1.2) blur(6px); }
+    .navbar .navbar-brand { color: var(--text); }
+
+    /* بطاقات المنصات + تفاعلات محسّنة */
+    .card-platform{
+      background: var(--bg-card);
+      border: 1px solid rgba(13, 13, 14, 0.1);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      will-change: transform;
+    }
+    .card-platform:hover{
+      transform: translateY(-5px);
+      box-shadow: 0 14px 26px rgba(0,0,0,.10);
+      border-color: var(--ring);
+    }
+    .card-platform:focus-within{
+      outline: 3px solid var(--ring);
+      outline-offset: 2px;
+    }
+
+    .avatar, .logo{
+      width:44px; height:44px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:18px; background: var(--chip); color: var(--chip-text); overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(15, 15, 15, 0.12);
+    }
+    .logo img{ width:100%; height:100%; object-fit: cover; }
+
+    .tag{
+      padding:.25rem .55rem; border-radius:999px; font-size:.75rem; background: var(--chip); color: var(--chip-text);
+      border: 1px solid rgba(24, 24, 25, 0.12);
+      transition: transform .15s ease;
+    }
+    .tag:hover{ transform: translateY(-2px); }
+
+    .category-pill input{ display:none; }
+    .category-pill label{ cursor:pointer; user-select:none; transition: transform .12s ease, background .12s ease; }
+    .category-pill input:checked + label{ background: var(--primary); color:#fff; border-color: transparent; }
+    .category-pill label:hover{ transform: translateY(-2px); }
+
+    .search-input{ max-width: 560px; }
+
+    /* شريط المفضلة الجانبي (Rail) */
+    .favorites-rail{
+      position: sticky; top: 84px;
+      max-height: calc(100vh - 100px);
+      overflow: auto;
+      padding-bottom: .5rem;
+    }
+    .fav-mini{
+      background: var(--bg-card);
+      border: 1px dashed rgba(98,86,249,.25);
+      transition: background .2s, transform .2s, border-color .2s;
+    }
+    .fav-mini:hover{
+      transform: translateY(-2px);
+      border-color: var(--ring);
+    }
+
+    /* تحسين تباين بعض البادجات في النهاري */
+    .badge.text-bg-info{ color: #083a5d !important; }
+    [data-bs-theme="dark"] .badge.text-bg-info{ color: #d3efff !important; }
+
+    footer{ color: var(--muted); }
+
+    /* زر نجمة تفاعلي */
+    .btn-fav { transition: transform .15s ease; }
+    .btn-fav:active { transform: scale(.92); }
+
+    /* حركة رقيقة عند الظهور */
+    @keyframes pop {
+      from { transform: scale(.98); opacity: .0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .pop-in { animation: pop .22s ease both; }
+  </style>
+</head>
+<body data-bs-theme="light">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top border-bottom">
+    <div class="container py-2">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+        <span class="logo"><img alt="PL" loading="lazy" src="https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/svg/1f4da.svg"></span>
+        <span>مجمّع رؤيا للمنصات التعليمية</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <button class="btn btn-outline-warning d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#favCanvas" title="المفضلة">
+          <i class="bi bi-star-fill"></i>
+        </button>
+        <div id="searchMount" class="d-none d-lg-block"></div>
+        <div id="themeMount" class="ms-2"></div>
+        <button class="navbar-toggler ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-label="Toggle">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse mt-2 mt-lg-0" id="navContent">
+        <div class="ms-auto d-flex align-items-center gap-2 d-lg-none w-100">
+          <div id="searchMountSm" class="flex-grow-1"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <div class="row g-4">
+      <!-- عمود المحتوى الرئيسي -->
+      <div class="col-12 col-xl-9 order-2 order-xl-1">
+        <div id="filtersMount" class="mb-3"></div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div id="controlsMount" class="d-flex align-items-center gap-2"></div>
+        </div>
+
+        <div id="gridMount"></div>
+      </div>
+
+      <!-- شريط المفضلة الجانبي -->
+      <aside class="col-12 col-xl-3 order-1 order-xl-2">
+        <div class="favorites-rail">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="mb-0"><i class="bi bi-star-fill text-warning me-1"></i> المفضلة</h6>
+            <small class="text-body-secondary">تظهر هنا على الشاشات الكبيرة</small>
+          </div>
+          <div id="favRail"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  
+  
+  <footer class="container py-4 border-top" >
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
+      <div class="small"><span id="year"></span> © مجمّع رؤيا للمنصات التعليمية</div>
+    </div>
+  </footer>
+
+  <!-- Offcanvas للمفضلة على الشاشات الصغيرة -->
+  <div class="offcanvas offcanvas-bottom" tabindex="-1" id="favCanvas" aria-labelledby="favCanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="favCanvasLabel"><i class="bi bi-star-fill text-warning me-2"></i>المفضلة</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="إغلاق"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div id="favCanvasBody"></div>
+    </div>
+  </div>
+
+  <!-- بيانات المنصات بصيغة JSON ضمنية (شعارات عند الإمكان) -->
+  <script type="application/json" id="data-platforms">
+  {
+    "platforms": [
+      {"id":"hsoub","name":"أكاديمية حسوب","url":"https://academy.hsoub.com/","categories":["كورسات","ويب","Backend","مهنة"],"lang":["ar"],"tags":["عربي","مسارات","مشاريع","شهادات"],"logo":"https://academy.hsoub.com/public/images/academy-logo.png","description":"دروس ودورات عربية احترافية تغطي الويب، البرمجة، والعمل الحر."},
+      {"id":"rwaq","name":"رواق","url":"https://www.rwaq.org/","categories":["كورسات","أساسيات","CS"],"lang":["ar"],"tags":["عربي","جامعي","مسارات"],"logo":"https://www.rwaq.org/assets/logo-52c1d6f2.png","description":"منصة تعليمية عربية بدورات من أساتذة جامعات وخبراء."},
+      {"id":"edraak","name":"إدراك","url":"https://www.edraak.org/","categories":["كورسات","أساسيات","CS","إدارة","محاسبة","طب"],"lang":["ar"],"tags":["MOOC","عربي","مسارات"],"logo":"https://www.edraak.org/static/img/edraak-logo.svg","description":"دورات عربية مفتوحة تشمل التقنية، الإدارة، الطب، وغيرها."},
+      {"id":"barmej","name":"برمج","url":"https://www.barmej.com/","categories":["كورسات","ويب","موبايل","Backend"],"lang":["ar"],"tags":["عربي","مسارات","تطبيقات"],"logo":"https://www.barmej.com/assets/images/brand/logo.svg","description":"مسارات عربية عملية لتعلّم البرمجة من الصفر حتى الاحتراف."},
+      {"id":"doroob","name":"دروب","url":"https://www.doroob.sa/","categories":["مهارات","إدارة","محاسبة","وظيفة"],"lang":["ar"],"tags":["منصة وطنية","مسارات","شهادات"],"logo":"https://www.doroob.sa/themes/custom/doroob_theme/favicon.ico","description":"منصة وطنية للتدريب تشمل إدارة الأعمال والمهارات الوظيفية."},
+      {"id":"edlal","name":"إدلال","url":"https://edlal.org/","categories":["كورسات","إدارة","تسويق","تقنية"],"lang":["ar"],"tags":["عربي","قصير","مجاني"],"logo":"https://edlal.org/favicon.ico","description":"دورات عربية قصيرة ومتنوعة مقدمة من خبراء ومؤسسات."},
+      {"id":"ipa","name":"معهد الإدارة العامة","url":"https://ipa.edu.sa/","categories":["إدارة","موارد بشرية","حوكمة"],"lang":["ar"],"tags":["شهادات","برامج","مسارات"],"logo":"https://ipa.edu.sa/_catalogs/masterpage/ipaLogo.png","description":"برامج ودورات عربية متخصصة في الإدارة والحوكمة والموارد البشرية."},
+      {"id":"w3schools","name":"W3Schools","url":"https://www.w3schools.com/","categories":["ويب","Frontend"],"lang":["en"],"tags":["HTML","CSS","JavaScript","SQL","Bootstrap"],"logo":"https://www.w3schools.com/images/w3schools_logo_436_2.png","description":"شروحات تفاعلية وتمارين للويب وتقنيات الواجهة."},
+      {"id":"freecodecamp","name":"freeCodeCamp","url":"https://www.freecodecamp.org/","categories":["ويب","Frontend","Backend"],"lang":["en","ar"],"tags":["Projects","Certificates","JavaScript","Node"],"logo":"https://design-style-guide.freecodecamp.org/downloads/fcc-primary-small.png","description":"مسارات عملية ومشاريع وشهادات (مجتمع عالمي ودعم متعدد اللغات)."},
+      {"id":"mdn","name":"MDN Web Docs","url":"https://developer.mozilla.org/","categories":["ويب","Frontend"],"lang":["en"],"tags":["Docs","JavaScript","CSS","HTML"],"logo":"https://developer.mozilla.org/static/img/favicon144.png","description":"مرجع شامل لمطوري الويب من موزيلا."},
+      {"id":"codecademy","name":"Codecademy","url":"https://www.codecademy.com/","categories":["ويب","Backend","علم البيانات"],"lang":["en"],"tags":["Python","Java","SQL","Interactive"],"logo":"https://www.codecademy.com/favicon.ico","description":"دروس تفاعلية ومسارات متعددة."},
+      {"id":"coursera","name":"Coursera","url":"https://www.coursera.org/","categories":["جامعي","علم البيانات","CS","طب","إدارة","محاسبة"],"lang":["en","ar"],"tags":["University","Projects","Specialization"],"logo":"https://d3njjcbhbojbot.cloudfront.net/web/images/favicons/apple-touch-icon-76x76.png","description":"دورات جامعية وتخصصات في التقنية والطب والإدارة والمالية."},
+      {"id":"udemy","name":"Udemy","url":"https://www.udemy.com/","categories":["ويب","Backend","موبايل","علم البيانات","إدارة","محاسبة"],"lang":["en","ar"],"tags":["Arabic","English","Variety"],"logo":"https://www.udemy.com/staticx/udemy/images/v7/favicon-96x96.png","description":"منصة دورات واسعة بمدربين مستقلين (تتوفر دورات عربية)."},
+      {"id":"edx","name":"edX","url":"https://www.edx.org/","categories":["جامعي","CS","علم البيانات","طب","إدارة"],"lang":["en"],"tags":["MIT","Harvard","MicroMasters"],"logo":"https://www.edx.org/favicon.ico","description":"دورات وبرامج احترافية من جامعات عالمية."},
+      {"id":"pluralsight","name":"Pluralsight","url":"https://www.pluralsight.com/","categories":["Backend","DevOps","أمن"],"lang":["en"],"tags":[".NET","Cloud","Skill IQ"],"logo":"https://www.pluralsight.com/etc.clientlibs/pluralsight/clientlibs/clientlib-base/resources/favicons/favicon-32x32.png","description":"تعلم احترافي مع تقييم مهارات."},
+      {"id":"udacity","name":"Udacity","url":"https://www.udacity.com/","categories":["مهنة","علم البيانات","ذكاء اصطناعي","أعمال"],"lang":["en"],"tags":["Nanodegree","Projects","Mentors"],"logo":"https://www.udacity.com/favicon-32x32.png","description":"مسارات مهنية بمشاريع ومرشدين."},
+      {"id":"odin","name":"The Odin Project","url":"https://www.theodinproject.com/","categories":["ويب","Frontend","Backend"],"lang":["en"],"tags":["Free","Projects","Ruby","JS"],"logo":"https://www.theodinproject.com/favicon-32x32.png","description":"منهج متكامل لتعلم تطوير الويب بالمشاريع."},
+      {"id":"frontendmentor","name":"Frontend Mentor","url":"https://www.frontendmentor.io/","categories":["Frontend","ويب"],"lang":["en"],"tags":["Design","Practice","Challenges"],"logo":"https://www.frontendmentor.io/static/favicon.ico","description":"تحديات لبناء واجهات واقعية من تصاميم."},
+      {"id":"leetcode","name":"LeetCode","url":"https://leetcode.com/","categories":["خوارزميات","CS"],"lang":["en"],"tags":["Interviews","DSA","Problems"],"logo":"https://leetcode.com/static/images/LeetCode_logo.png","description":"مسائل خوارزميات للتحضير للمقابلات."},
+      {"id":"hackerrank","name":"HackerRank","url":"https://www.hackerrank.com/","categories":["خوارزميات","Backend","CS"],"lang":["en"],"tags":["Challenges","Contests","Interviews"],"logo":"https://hrcdn.net/community-frontend/assets/favicon-ddc852f75a.png","description":"تحديات ومسابقات برمجية."},
+      {"id":"codewars","name":"Codewars","url":"https://www.codewars.com/","categories":["خوارزميات"],"lang":["en"],"tags":["Kata","تحديات","مجتمع"],"logo":"https://www.codewars.com/packs/assets/favicon.61192d32.ico","description":"مسائل قصيرة بنظام نقاط."},
+      {"id":"khan","name":"Khan Academy","url":"https://www.khanacademy.org/","categories":["CS","أساسيات","رياضيات"],"lang":["en","ar"],"tags":["Free","Basics","JS"],"logo":"https://www.khanacademy.org/favicon.ico","description":"أساسيات الحوسبة والرياضيات والعلوم."},
+      {"id":"edabit","name":"Edabit","url":"https://edabit.com/","categories":["خوارزميات","مبتدئ"],"lang":["en"],"tags":["Challenges","Beginner","Python","JS"],"logo":"https://edabit.com/favicon-32x32.png","description":"تحديات بسيطة للمبتدئين."},
+      {"id":"cs50","name":"CS50 (Harvard)","url":"https://cs50.harvard.edu/","categories":["جامعي","CS","مبتدئ"],"lang":["en","ar"],"tags":["Harvard","Intro","C","Python"],"logo":"https://cs50.harvard.edu/favicon.ico","description":"مقدمة شاملة لعلوم الحاسوب."},
+      {"id":"geeksforgeeks","name":"GeeksforGeeks","url":"https://www.geeksforgeeks.org/","categories":["CS","خوارزميات","Backend"],"lang":["en"],"tags":["DSA","Articles","Practice"],"logo":"https://www.geeksforgeeks.org/wp-content/uploads/gfg_200X200.png","description":"مقالات ومسائل تدريبية."},
+      {"id":"sololearn","name":"SoloLearn","url":"https://www.sololearn.com/","categories":["مبتدئ","ويب","Backend"],"lang":["en","ar"],"tags":["Mobile","Quizzes","Community"],"logo":"https://www.sololearn.com/Images/favicons/favicon-32x32.png","description":"تعلم البرمجة عبر التطبيقات والمجتمع."},
+      {"id":"codeorg","name":"Code.org","url":"https://code.org/","categories":["أساسيات","مدرسي"],"lang":["en","ar"],"tags":["Kids","Blocks","K-12"],"logo":"https://code.org/images/favicon.ico","description":"تعليم أساسيات البرمجة للأطفال."},
+      {"id":"microsoftlearn","name":"Microsoft Learn","url":"https://learn.microsoft.com/training/","categories":["Cloud","DevOps","Backend","أمن"],"lang":["en","ar"],"tags":["Azure",".NET","Power Platform"],"logo":"https://learn.microsoft.com/favicon.ico","description":"مسارات ووحدات تفاعلية من مايكروسوفت."},
+      {"id":"ibmskills","name":"IBM SkillsBuild","url":"https://skillsbuild.org/","categories":["Cloud","Data","أمن","أعمال"],"lang":["en"],"tags":["IBM","Badges","Career"],"logo":"https://skillsbuild.org/wp-content/uploads/2022/05/cropped-favicon-32x32.png","description":"تعلم مهارات تقنية ومهنية مع شارات اعتماد."},
+      {"id":"datacamp","name":"DataCamp","url":"https://www.datacamp.com/","categories":["علم البيانات","تحليلات"],"lang":["en"],"tags":["Python","R","SQL","Tracks"],"logo":"https://www.datacamp.com/favicon.ico","description":"تعلم البيانات والتعلم الآلي عبر تمارين تفاعلية."},
+      {"id":"hbs","name":"Harvard Business School Online","url":"https://online.hbs.edu/","categories":["إدارة","قيادة","أعمال"],"lang":["en"],"tags":["HBS","CORe","Strategy"],"logo":"https://online.hbs.edu/favicon.ico","description":"برامج أعمال وقيادة من HBS Online."},
+      {"id":"linkedinlearning","name":"LinkedIn Learning","url":"https://www.linkedin.com/learning/","categories":["أعمال","إدارة","محاسبة","تقنية"],"lang":["en","ar"],"tags":["Business","Creative","Tech"],"logo":"https://static.licdn.com/scds/common/u/images/logos/favicons/v1/favicon.ico","description":"دورات مهنية في الأعمال والتقنية والإبداع."},
+      {"id":"cfi","name":"Corporate Finance Institute (CFI)","url":"https://corporatefinanceinstitute.com/","categories":["محاسبة","مالية","أعمال"],"lang":["en"],"tags":["FMVA","FP&A","Banking"],"logo":"https://corporatefinanceinstitute.com/wp-content/uploads/2019/08/cfi-favicon.png","description":"اعتمادات ومهارات في المالية والمحاسبة."},
+      {"id":"acca","name":"ACCA","url":"https://www.accaglobal.com/","categories":["محاسبة","مالية"],"lang":["en"],"tags":["Certification","IFRS","Audit"],"logo":"https://www.accaglobal.com/etc.clientlibs/clientlibs/accaglobal/clientlib-site/resources/favicon.ico","description":"هيئة اعتماد المحاسبين ACCA ومواد تحضيرية."},
+      {"id":"becker","name":"Becker CPA","url":"https://www.becker.com/cpa-review","categories":["محاسبة"],"lang":["en"],"tags":["CPA","Review","Prep"],"logo":"https://www.becker.com/themes/custom/becker/favicon.ico","description":"مراجعات واختبارات تحضيرية لشهادة CPA."},
+      {"id":"hubspot","name":"HubSpot Academy","url":"https://academy.hubspot.com/","categories":["تسويق","مبيعات","أعمال"],"lang":["en"],"tags":["Inbound","CRM","Certificates"],"logo":"https://academy.hubspot.com/hubfs/academy-logomark.svg","description":"شهادات مجانية في التسويق والمبيعات وإدارة علاقات العملاء."},
+      {"id":"googledigital","name":"Google Digital Garage","url":"https://learndigital.withgoogle.com/digitalgarage","categories":["تسويق","أعمال","مهارات"],"lang":["en","ar"],"tags":["SEO","Analytics","Ads"],"logo":"https://learndigital.withgoogle.com/digitalgarage/static/images/favicons/favicon-32x32.png","description":"مهارات رقمية وشهادات من جوجل."},
+      {"id":"opensap","name":"openSAP","url":"https://open.sap.com/","categories":["أعمال","SAP","تقنية"],"lang":["en"],"tags":["ERP","SAP","Modules"],"logo":"https://open.sap.com/assets/favicon.ico","description":"دورات مجانية على تقنيات وأنظمة SAP."},
+      {"id":"lecturio","name":"Lecturio Medical","url":"https://www.lecturio.com/","categories":["طب","صحة"],"lang":["en"],"tags":["USMLE","Videos","Qbank"],"logo":"https://www.lecturio.com/favicon-32x32.png","description":"منصة فيديوهات وأسئلة تحضيرية لطلاب الطب."},
+      {"id":"amboss","name":"AMBOSS","url":"https://www.amboss.com/","categories":["طب"],"lang":["en"],"tags":["Qbank","Library","USMLE"],"logo":"https://www.amboss.com/favicon-32x32.png","description":"مكتبة طبية وبنك أسئلة للتحضير والمرجعية السريرية."},
+      {"id":"osmosis","name":"Osmosis","url":"https://www.osmosis.org/","categories":["طب","تمريض"],"lang":["en"],"tags":["Videos","Flashcards","Clinicals"],"logo":"https://www.osmosis.org/favicon-32x32.png","description":"شروحات فيديو مبسطة وبطاقات مراجعة في الطب."},
+      {"id":"bmjlearning","name":"BMJ Learning","url":"https://learning.bmj.com/","categories":["طب"],"lang":["en"],"tags":["CME","Clinical","Guidelines"],"logo":"https://learning.bmj.com/learning/static/img/favicon.ico","description":"تعليم طبي مستمر ومحتوى سريري من BMJ."},
+      {"id":"medscape","name":"Medscape CME","url":"https://www.medscape.org/","categories":["طب"],"lang":["en"],"tags":["CME","News","Clinical"],"logo":"https://www.medscape.org/favicon.ico","description":"مقالات طبية ودورات CME."},
+      {"id":"figure1","name":"Figure 1","url":"https://www.figure1.com/","categories":["طب"],"lang":["en"],"tags":["Cases","Community","Images"],"logo":"https://www.figure1.com/favicon-32x32.png","description":"مجتمع لمشاركة الحالات والصور الطبية."},
+      {"id":"futurelearn","name":"FutureLearn","url":"https://www.futurelearn.com/","categories":["كورسات","طب","إدارة","تعليم"],"lang":["en"],"tags":["Short Courses","Microcreds"],"logo":"https://www.futurelearn.com/favicon-32x32.png","description":"دورات قصيرة من جامعات ومؤسسات."},
+      {"id":"openclassrooms","name":"OpenClassrooms","url":"https://openclassrooms.com/","categories":["ويب","أعمال","تصميم"],"lang":["en","fr"],"tags":["Paths","Mentorship"],"logo":"https://openclassrooms.com/favicon-32x32.png","description":"مسارات مع توجيه ومشاريع."},
+      {"id":"skillshare","name":"Skillshare","url":"https://www.skillshare.com/","categories":["إبداع","أعمال","تقنية"],"lang":["en"],"tags":["Creative","Business","Tech"],"logo":"https://static.skillshare.com/assets/images/favicon.ico","description":"دورات قصيرة في الإبداع والأعمال والتقنية."}
+    ]
+  }
+  </script>
+
+  <!-- React, Babel, AOS, Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.7/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // Theme utils (الافتراضي يظل نهاري ما لم يختر المستخدم غير ذلك)
+    const getInitialTheme = () => {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return 'dark'; // إجبار البداية نهاري
+    };
+    const setThemeAttr = (t) => document.body.setAttribute('data-bs-theme', t);
+
+    // Favorites
+    const loadFavorites = () => { try { return JSON.parse(localStorage.getItem('favorites')) || []; } catch { return []; } };
+    const saveFavorites = (ids) => localStorage.setItem('favorites', JSON.stringify(ids));
+
+    // UI Pieces
+    const ThemeToggle = ({ theme, onToggle }) => (
+      <div className="btn-group" role="group" aria-label="تبديل الثيم">
+        <button className={`btn btn-sm ${theme==='light'? 'btn-secondary':'btn-outline-secondary'}`} onClick={() => onToggle('light')} title="وضع نهاري">
+          <i className="bi bi-brightness-high"></i>
+        </button>
+        <button className={`btn btn-sm ${theme==='dark'? 'btn-secondary':'btn-outline-secondary'}`} onClick={() => onToggle('dark')} title="وضع ليلي">
+          <i className="bi bi-moon-stars"></i>
+        </button>
+      </div>
+    );
+
+    const SearchBar = ({ value, onChange }) => (
+      <div className="input-group search-input">
+        <span className="input-group-text"><i className="bi bi-search"></i></span>
+        <input className="form-control" placeholder="ابحث باسم المنصة أو الوسوم أو اللغة..." value={value} onChange={e => onChange(e.target.value)} />
+      </div>
+    );
+
+    const Controls = ({ showFavOnly, toggleFavOnly, sortBy, setSortBy, langFilter, setLangFilter }) => (
+      <div className="d-flex gap-2 align-items-center">
+        <div className="form-check form-switch">
+          <input className="form-check-input" type="checkbox" checked={showFavOnly} onChange={e => toggleFavOnly(e.target.checked)} id="favOnlySwitch"/>
+          <label className="form-check-label" htmlFor="favOnlySwitch">
+            <i className="bi bi-star-fill text-warning me-1"></i>المفضلة فقط
+          </label>
+        </div>
+        <select className="form-select form-select-sm" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="name">ترتيب: الاسم</option>
+          <option value="cats">ترتيب: عدد التصنيفات</option>
+          <option value="tags">ترتيب: عدد الوسوم</option>
+        </select>
+        <select className="form-select form-select-sm" value={langFilter} onChange={e => setLangFilter(e.target.value)} title="فلترة حسب اللغة">
+          <option value="all">كل اللغات</option>
+          <option value="ar">العربية</option>
+          <option value="en">الإنجليزية</option>
+          <option value="fr">الفرنسية</option>
+        </select>
+      </div>
+    );
+
+    const CategoryFilters = ({ categories, activeCats, toggleCat }) => (
+      <div className="d-flex flex-wrap gap-2 mb-2">
+        {categories.map(cat => (
+          <span key={cat.name} className="category-pill">
+            <input type="checkbox" id={`cat-${cat.name}`} checked={activeCats.includes(cat.name)} onChange={() => toggleCat(cat.name)} />
+            <label className="badge rounded-pill border px-3 py-2" htmlFor={`cat-${cat.name}`}>
+              {cat.name} <span className="ms-1 text-body-secondary">{cat.count}</span>
+            </label>
+          </span>
+        ))}
+      </div>
+    );
+
+    const PlatformCard = ({ platform, isFav, toggleFav, delay=0 }) => (
+      <div className="col pop-in" data-aos="fade-up" data-aos-delay={delay}>
+        <div className="card card-platform h-100">
+          <div className="card-body d-flex flex-column">
+            <div className="d-flex justify-content-between align-items-start mb-2">
+              <div className="d-flex align-items-center gap-2">
+                <div className="logo" title={platform.name}>
+                  {platform.logo
+                    ? <img src={platform.logo} alt={platform.name} loading="lazy" onError={(e)=>{e.currentTarget.parentElement.innerHTML=platform.name.split(' ').map(w=>w[0]).join('').slice(0,3);}}/>
+                    : platform.name.split(' ').map(w => w[0]).join('').slice(0,3)
+                  }
+                </div>
+                <div>
+                  <h5 className="card-title mb-1">{platform.name}</h5>
+                  <div className="small text-body-secondary">{platform.categories.join(' · ')} · {platform.lang.join(' / ')}</div>
+                </div>
+              </div>
+              <button className={`btn btn-sm btn-fav ${isFav ? 'btn-warning' : 'btn-outline-secondary'}`} onClick={() => toggleFav(platform.id)} aria-label="تبديل مفضلة">
+                <i className={`bi ${isFav ? 'bi-star-fill' : 'bi-star'}`}></i>
+              </button>
+            </div>
+            <p className="card-text flex-grow-1">{platform.description}</p>
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              {platform.tags.slice(0,6).map(tag => <span key={tag} className="tag">#{tag}</span>)}
+            </div>
+            <div className="d-flex gap-2 mt-auto">
+              <a href={platform.url} target="_blank" rel="noopener noreferrer" className="btn btn-primary flex-fill">
+                زيارة المنصة <i className="bi bi-box-arrow-up-left ms-1"></i>
+              </a>
+              <button className="btn btn-outline-secondary" onClick={() => toggleFav(platform.id)}>
+                {isFav ? 'إزالة المفضلة' : 'أضف للمفضلة'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const Grid = ({ items, favIds, toggleFav }) => (
+      items.length ? (
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-3 g-3">
+          {items.map((p, idx) => (
+            <PlatformCard key={p.id} platform={p} isFav={favIds.includes(p.id)} toggleFav={toggleFav} delay={(idx % 12) * 40} />
+          ))}
+        </div>
+      ) : (
+        
+        <div className="text-center py-5">
+          <div className="display-6 mb-2">لا نتائج</div>
+          <p className="text-body-secondary">جرّب تعديل البحث أو الفلاتر.</p>
+        </div>
+      )
+    );
+
+    const FavoritesRail = ({ items, removeFav }) => (
+      items.length ? (
+        <div className="vstack gap-2" data-aos="fade-left" data-aos-duration="500">
+          {items.map(p => (
+            <div key={p.id} className="p-2 rounded-3 fav-mini d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center gap-2">
+                <div className="logo" style={{width:36,height:36}}>
+                  {p.logo ? <img src={p.logo} alt={p.name} loading="lazy" /> : p.name.slice(0,2)}
+                </div>
+                <a className="text-decoration-none" href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>
+              </div>
+              <button className="btn btn-sm btn-outline-danger" title="إزالة" onClick={()=>removeFav(p.id)}>
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-body-secondary small">لم تضف أي عنصر بعد. استخدم زر النجمة على البطاقات.</div>
+      )
+    );
+
+    const App = () => {
+      const [theme, setTheme] = useState(getInitialTheme());
+      const [platforms, setPlatforms] = useState([]);
+      const [query, setQuery] = useState('');
+      const [activeCats, setActiveCats] = useState([]);
+      const [favIds, setFavIds] = useState(loadFavorites());
+      const [showFavOnly, setShowFavOnly] = useState(false);
+      const [sortBy, setSortBy] = useState('name');
+      const [langFilter, setLangFilter] = useState('all');
+
+      // Theme persist
+      useEffect(() => {
+        setThemeAttr(theme);
+        localStorage.setItem('theme', theme);
+      }, [theme]);
+
+      // Load data
+      useEffect(() => {
+        const data = JSON.parse(document.getElementById('data-platforms').textContent);
+        setPlatforms(data.platforms);
+      }, []);
+
+      // AOS
+      useEffect(() => { AOS.init({ once: true, duration: 520, easing: 'ease-out' }); }, [platforms]);
+
+      // Categories with counts
+      const categories = useMemo(() => {
+        const map = new Map();
+        platforms.forEach(p => p.categories.forEach(c => map.set(c, (map.get(c)||0) + 1)));
+        return Array.from(map.entries()).map(([name, count]) => ({ name, count }))
+                    .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+      }, [platforms]);
+
+      const toggleCat = cat => {
+        setActiveCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+      };
+
+      const toggleFav = id => {
+        setFavIds(prev => {
+          const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+          saveFavorites(next);
+          return next;
+        });
+      };
+
+      const removeFav = (id) => {
+        setFavIds(prev => {
+          const next = prev.filter(x => x !== id);
+          saveFavorites(next);
+          return next;
+        });
+      };
+
+      // Filtering + sorting
+      const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        let list = platforms.filter(p => {
+          const matchQ = !q || p.name.toLowerCase().includes(q)
+                        || p.description.toLowerCase().includes(q)
+                        || p.tags.some(t => t.toLowerCase().includes(q))
+                        || p.lang.some(l => l.toLowerCase().includes(q));
+          const matchC = activeCats.length === 0 || activeCats.every(c => p.categories.includes(c));
+          const matchF = !showFavOnly || favIds.includes(p.id);
+          const matchLang = (langFilter === 'all') || p.lang.includes(langFilter);
+          return matchQ && matchC && matchF && matchLang;
+        });
+
+        list.sort((a, b) => {
+          if (sortBy === 'name') return a.name.localeCompare(b.name, 'ar');
+          if (sortBy === 'cats') return b.categories.length - a.categories.length;
+          if (sortBy === 'tags') return b.tags.length - a.tags.length;
+          return 0;
+        });
+        return list;
+      }, [platforms, query, activeCats, showFavOnly, favIds, sortBy, langFilter]);
+
+      // Favorites (objects)
+      const favoriteItems = useMemo(() => platforms.filter(p => favIds.includes(p.id)), [platforms, favIds]);
+
+      // Mounting portals for navbar search areas
+      useEffect(() => {
+        const sm = document.getElementById('searchMountSm');
+        const lg = document.getElementById('searchMount');
+        if (sm) ReactDOM.createRoot(sm).render(<SearchBar value={query} onChange={setQuery} />);
+        if (lg) ReactDOM.createRoot(lg).render(<SearchBar value={query} onChange={setQuery} />);
+      }, [query]);
+
+      // Controls & filters mounts
+      useEffect(() => {
+        const filtersMount = document.getElementById('filtersMount');
+        const controlsMount = document.getElementById('controlsMount');
+        if (filtersMount) ReactDOM.createRoot(filtersMount).render(<CategoryFilters categories={categories} activeCats={activeCats} toggleCat={toggleCat} />);
+        if (controlsMount) ReactDOM.createRoot(controlsMount).render(
+          <Controls
+            showFavOnly={showFavOnly}
+            toggleFavOnly={setShowFavOnly}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            langFilter={langFilter}
+            setLangFilter={setLangFilter}
+          />
+        );
+      }, [categories, activeCats, showFavOnly, sortBy, langFilter]);
+
+      return <>
+        <div className="d-flex justify-content-between align-items-center mb-3" data-aos="zoom-in" data-aos-duration="400">
+          <ThemeToggle theme={theme} onToggle={setTheme} />
+        </div>
+
+        <div className="mt-3">
+          <Grid items={filtered} favIds={favIds} toggleFav={toggleFav} />
+        </div>
+
+        {/* شريط المفضلة (الجانب) */}
+        {ReactDOM.createPortal(<FavoritesRail items={favoriteItems} removeFav={removeFav} />, document.getElementById('favRail'))}
+        {/* نفس المحتوى داخل Offcanvas للموبايل */}
+        {ReactDOM.createPortal(<FavoritesRail items={favoriteItems} removeFav={removeFav} />, document.getElementById('favCanvasBody'))}
+      </>;
+    };
+
+    // Render main app
+    ReactDOM.createRoot(document.getElementById('gridMount')).render(<App />);
+
+    // Theme toggle on navbar (standalone)
+    const ThemeShell = () => {
+      const [th, setTh] = useState(getInitialTheme());
+      useEffect(() => { setThemeAttr(th); localStorage.setItem('theme', th); }, [th]);
+      return <ThemeToggle theme={th} onToggle={setTh} />;
+    };
+    ReactDOM.createRoot(document.getElementById('themeMount')).render(<ThemeShell />);
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
